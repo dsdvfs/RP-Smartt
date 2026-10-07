@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RP Smart — Генератор рабочих программ</title>
+<style>
+:root{
+    --bg:#f5f7fb; --panel:#fff; --text:#172033; --muted:#6b7280;
+    --line:#e5e7eb; --primary:#5b5ce2; --primary2:#4849c8;
+    --green:#16a34a; --red:#dc2626; --orange:#ea580c;
+    --shadow:0 8px 30px rgba(20,30,60,.07); --radius:16px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#111827;color:#fff;padding:22px 14px;position:fixed;inset:0 auto 0 0}
+.logo{font-size:22px;font-weight:800;padding:8px 10px 25px}
+.logo span{color:#818cf8}
+.nav{display:grid;gap:7px}
+.nav button{border:0;background:transparent;color:#cbd5e1;text-align:left;padding:12px 13px;border-radius:10px}
+.nav button:hover,.nav button.active{background:#272f45;color:#fff}
+.main{margin-left:245px;width:calc(100% - 245px)}
+.topbar{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:5}
+.topbar strong{font-size:18px}
+.user{font-size:13px;color:var(--muted)}
+.content{padding:30px;max-width:1300px;margin:auto}
+.view{display:none}.view.active{display:block}
+.hero{background:linear-gradient(135deg,#5051dc,#7778f4);color:white;border-radius:20px;padding:30px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 8px;font-size:30px}.hero p{margin:0;opacity:.9}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.card h2,.card h3{margin:0 0 17px}
+.stat{min-height:125px}.stat .num{font-size:32px;font-weight:800;margin:8px 0}.stat small{color:var(--muted)}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700}
+.btn.primary{background:var(--primary);color:white}.btn.primary:hover{background:var(--primary2)}
+.btn.light{background:#eef0ff;color:#4647bd}.btn.gray{background:#eef0f3;color:#374151}.btn.danger{background:#fee2e2;color:#b91c1c}.btn.green{background:#dcfce7;color:#15803d}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:17px}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+.field input,.field select,.field textarea{width:100%;border:1px solid #d8dce5;border-radius:10px;padding:11px 12px;background:white;outline:none}
+.field textarea{min-height:90px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px #eef0ff}
+.full{grid-column:1/-1}
+.steps{display:flex;gap:8px;margin-bottom:20px;overflow:auto}
+.step{padding:10px 14px;border-radius:999px;background:#e9ecf2;color:#667085;white-space:nowrap;font-size:13px;font-weight:700}
+.step.active{background:#e5e7ff;color:#4b4cc8}
+.section{display:none}.section.active{display:block}
+.footer-actions{display:flex;justify-content:space-between;margin-top:22px}
+.hours{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}
+.hour{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.hour b{font-size:22px;display:block}.hour span{font-size:12px;color:var(--muted)}
+.alert{padding:12px 14px;border-radius:10px;margin-top:16px;font-size:14px}
+.alert.ok{background:#ecfdf3;color:#166534;border:1px solid #bbf7d0}
+.alert.bad{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+.alert.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.topic-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.topic-list{display:grid;gap:9px}
+.topic{display:grid;grid-template-columns:42px 1fr 90px 95px;gap:9px;align-items:center;border:1px solid var(--line);padding:10px;border-radius:11px;background:#fff}
+.topic.dragging{opacity:.5}
+.topic .num{font-weight:800;color:var(--primary);text-align:center}
+.topic input{border:1px solid #dddfe6;border-radius:8px;padding:9px;width:100%}
+.badge{padding:6px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef0ff;color:#4b4cc8}
+.table-wrap{overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:650px}
+th,td{border-bottom:1px solid var(--line);padding:12px;text-align:left}
+th{background:#f8fafc;font-size:13px}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.program-item{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px;border-bottom:1px solid var(--line)}
+.program-item:last-child{border-bottom:0}
+.program-title{font-weight:800}.program-meta{font-size:13px;color:var(--muted);margin-top:4px}
+.preview{background:white;border:1px solid var(--line);padding:35px;max-width:900px;margin:auto;box-shadow:var(--shadow)}
+.preview h1{text-align:center;font-size:20px}.preview h2{font-size:16px;margin-top:26px}
+.mobile-menu{display:none}
+@media(max-width:900px){
+    .sidebar{width:210px}.main{margin-left:210px;width:calc(100% - 210px)}
+    .grid{grid-template-columns:1fr}.hours{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:650px){
+    .sidebar{display:none}.main{margin-left:0;width:100%}.mobile-menu{display:block}
+    .content{padding:16px}.topbar{padding:0 16px}.form-grid{grid-template-columns:1fr}
+    .topic{grid-template-columns:32px 1fr}.topic input:nth-of-type(2),.topic button{grid-column:2}
+    .hero{padding:22px}.hero h1{font-size:24px}
+}
+@media print{
+    body{background:white}.sidebar,.topbar,.no-print{display:none!important}
+    .main{margin:0;width:100%}.content{padding:0}.preview{box-shadow:none;border:0;max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+    <div class="logo">RP <span>Smart</span></div>
+    <nav class="nav">
+        <button data-view="home" class="active">⌂ Главная</button>
+        <button data-view="create">＋ Создать РП</button>
+        <button data-view="topics">☷ Тематический план</button>
+        <button data-view="saved">▣ Мои программы</button>
+        <button data-view="preview">▤ Предпросмотр</button>
+    </nav>
+</aside>
+
+<main class="main">
+<header class="topbar">
+    <div><button class="btn gray mobile-menu" onclick="toggleMobile()">☰</button> <strong id="pageTitle">Главная</strong></div>
+    <div class="user">Преподаватель · RP Smart</div>
+</header>
+
+<div class="content">
+
+<section id="home" class="view active">
+    <div class="hero">
+        <h1>Рабочие программы — без лишних таблиц</h1>
+        <p>Заполните исходные данные, распределите часы и сформируйте тематический план.</p>
+        <div class="actions" style="margin-top:20px">
+            <button class="btn" style="background:white;color:#4b4cc8" onclick="openView('create')">Создать рабочую программу</button>
+        </div>
+    </div>
+    <div class="grid">
+        <div class="card stat"><small>Создано программ</small><div class="num" id="statPrograms">0</div><small>сохранено в браузере</small></div>
+        <div class="card stat"><small>Часов в текущей РП</small><div class="num" id="statHours">72</div><small>плановый объём</small></div>
+        <div class="card stat"><small>Тем в плане</small><div class="num" id="statTopics">36</div><small>по 2 часа</small></div>
+    </div>
+    <div class="card" style="margin-top:18px">
+        <h2>Что умеет система</h2>
+        <div class="grid">
+            <div><b>Автоподстановка</b><p style="color:var(--muted)">Специальность, квалификация, ПМ и РО вводятся один раз.</p></div>
+            <div><b>Расчёт часов</b><p style="color:var(--muted)">Теория, практика, лабораторные и самостоятельная работа проверяются автоматически.</p></div>
+            <div><b>Генерация тем</b><p style="color:var(--muted)">Создаётся последовательность тем от простого к сложному.</p></div>
+        </div>
+    </div>
+</section>
+
+<section id="create" class="view">
+    <div class="steps">
+        <div class="step active" data-step-label="1">1. Общие данные</div>
+        <div class="step" data-step-label="2">2. Дисциплина</div>
+        <div class="step" data-step-label="3">3. Результат обучения</div>
+        <div class="step" data-step-label="4">4. Тематический план</div>
+    </div>
+
+    <div class="card">
+        <div class="section active" data-section="1">
+            <h2>Общая информация</h2>
+            <div class="form-grid">
+                <div class="field"><label>Специальность</label><select id="specialty"><option>06130100 — Программное обеспечение</option><option>06120100 — Вычислительная техника и информационные системы</option></select></div>
+                <div class="field"><label>Квалификация</label><input id="qualification" value="4S06130103 — Разработчик программного обеспечения"></div>
+                <div class="field"><label>Курс</label><select id="course"><option>1 курс</option><option selected>2 курс</option><option>3 курс</option><option>4 курс</option></select></div>
+                <div class="field"><label>Группа</label><input id="group" placeholder="ПР-22"></div>
+                <div class="field"><label>Учебный год</label><input id="year" value="2026–2027"></div>
+                <div class="field"><label>Семестр</label><select id="semester"><option>1 семестр</option><option>2 семестр</option></select></div>
+                <div class="field"><label>Язык обучения</label><select id="language"><option>Русский</option><option>Казахский</option></select></div>
+            </div>
+        </div>
+
+        <div class="section" data-section="2">
+            <h2>Дисциплина / профессиональный модуль</h2>
+            <div class="form-grid">
+                <div class="field"><label>Тип программы</label><select id="programType"><option>Профессиональный модуль</option><option>Дисциплина</option></select></div>
+                <div class="field"><label>Код</label><input id="programCode" value="ПМ 10"></div>
+                <div class="field full"><label>Название</label><input id="programName" value="Разработка серверных приложений"></div>
+                <div class="field"><label>Количество часов</label><input id="totalHours" type="number" min="1" value="72" oninput="syncHours()"></div>
+                <div class="field"><label>Количество кредитов</label><input id="credits" type="number" min="0" value="3"></div>
+                <div class="field"><label>Форма контроля</label><select id="control"><option>Экзамен</option><option>Дифференцированный зачёт</option><option>Зачёт</option></select></div>
+            </div>
+        </div>
+
+        <div class="section" data-section="3">
+            <h2>Результат обучения и часы</h2>
+            <div class="form-grid">
+                <div class="field"><label>Код РО</label><input id="roCode" value="РО 10.1"></div>
+                <div class="field full"><label>Название результата обучения</label><textarea id="roName">Разрабатывать серверные приложения с использованием Node.js.</textarea></div>
+                <div class="field"><label>Теория</label><input class="hours-input" id="theory" type="number" min="0" value="24"></div>
+                <div class="field"><label>Практика</label><input class="hours-input" id="practice" type="number" min="0" value="24"></div>
+                <div class="field"><label>Лабораторные</label><input class="hours-input" id="lab" type="number" min="0" value="12"></div>
+                <div class="field"><label>Самостоятельная работа</label><input class="hours-input" id="selfWork" type="number" min="0" value="12"></div>
+            </div>
+            <div class="hours">
+                <div class="hour"><b id="hTheory">24</b><span>Теория</span></div>
+                <div class="hour"><b id="hPractice">24</b><span>Практика</span></div>
+                <div class="hour"><b id="hLab">12</b><span>Лабораторные</span></div>
+                <div class="hour"><b id="hSelf">12</b><span>Самостоятельная</span></div>
+                <div class="hour"><b id="hTotal">72</b><span>Всего</span></div>
+            </div>
+            <div id="hourAlert" class="alert ok">✓ Часы распределены полностью.</div>
+        </div>
+
+        <div class="section" data-section="4">
+            <div class="topic-toolbar">
+                <div><h2 style="margin-bottom:4px">Тематический план</h2><span class="badge" id="topicBadge">36 тем · 72 часа</span></div>
+                <div class="actions">
+                    <button class="btn light" onclick="generateTopics()">✨ Сгенерировать</button>
+                    <button class="btn gray" onclick="addTopic()">＋ Тема</button>
+                </div>
+            </div>
+            <div class="field" style="max-width:230px;margin-bottom:16px"><label>Часов на занятие</label><input id="topicDuration" type="number" min="1" value="2" oninput="updateTopicCount()"></div>
+            <div id="topicList" class="topic-list"></div>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn gray" id="backBtn" onclick="changeStep(-1)">← Назад</button>
+            <div class="actions">
+                <button class="btn light" onclick="saveDraft()">Сохранить черновик</button>
+                <button class="btn primary" id="nextBtn" onclick="changeStep(1)">Далее →</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="topics" class="view">
+    <div class="card">
+        <div class="topic-toolbar"><div><h2>Тематический план</h2><span class="badge" id="topicCountLabel">36 тем</span></div><button class="btn primary" onclick="openView('create');setStep(4)">Редактировать</button></div>
+        <div id="topicListMirror" class="topic-list"></div>
+    </div>
+</section>
+
+<section id="saved" class="view">
+    <div class="card">
+        <div class="topic-toolbar"><h2>Мои рабочие программы</h2><button class="btn primary" onclick="openView('create');setStep(1)">＋ Новая РП</button></div>
+        <div id="savedList"></div>
+    </div>
+</section>
+
+<section id="preview" class="view">
+    <div class="actions no-print" style="margin-bottom:15px">
+        <button class="btn primary" onclick="buildPreview()">Обновить предпросмотр</button>
+        <button class="btn green" onclick="window.print()">Печать / PDF</button>
+    </div>
+    <div class="preview" id="previewPaper">
+        <h1>РАБОЧАЯ УЧЕБНАЯ ПРОГРАММА</h1>
+        <p style="text-align:center" id="pName"></p>
+        <h2>1. Общая информация</h2>
+        <table><tbody id="pInfo"></tbody></table>
+        <h2>2. Результат обучения</h2>
+        <p id="pRo"></p>
+        <h2>3. Распределение часов</h2>
+        <table><tbody id="pHours"></tbody></table>
+        <h2>4. Тематический план</h2>
+        <table><thead><tr><th>№</th><th>Тема</th><th>Часы</th></tr></thead><tbody id="pTopics"></tbody></table>
+    </div>
+</section>
+
+</div>
+</main>
+</div>
+
+<script>
+const KEY='rp-smart-state-v2', SAVED='rp-smart-saved-v2';
+let step=1;
+let topics=[];
+
+const topicNames=[
+'Введение в Node.js','Архитектура Node.js','Установка Node.js и npm',
+'Работа с модулями','Создание собственного модуля','Работа с файловой системой',
+'Асинхронное программирование','Callback-функции','Promise','Async/Await',
+'Обработка ошибок','Event Loop','Пакетный менеджер npm','Создание проекта Node.js',
+'Работа с Express.js','Создание сервера Express','Маршрутизация','Middleware',
+'REST API','HTTP-запросы','Работа с JSON','Подключение базы данных',
+'MongoDB','MySQL','CRUD-операции','Авторизация пользователей',
+'Регистрация пользователей','JWT-токены','Безопасность серверных приложений',
+'Валидация данных','Обработка запросов','Логирование','Тестирование API',
+'Документирование API','Развёртывание приложения','Итоговый проект'
+];
+
+const $=id=>document.getElementById(id);
+
+document.querySelectorAll('.nav button').forEach(b=>{
+    b.addEventListener('click',()=>openView(b.dataset.view));
+});
+
+document.querySelectorAll('.hours-input').forEach(x=>x.addEventListener('input',syncHours));
+
+function openView(id){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    $(id).classList.add('active');
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+    const titles={home:'Главная',create:'Создание РП',topics:'Тематический план',saved:'Мои программы',preview:'Предпросмотр'};
+    $('pageTitle').textContent=titles[id]||'RP Smart';
+    if(id==='saved') renderSaved();
+    if(id==='topics') renderMirror();
+    if(id==='preview') buildPreview();
+    updateStats();
+}
+function setStep(n){
+    step=Math.max(1,Math.min(4,n));
+    document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.dataset.section==step));
+    document.querySelectorAll('.step').forEach((s,i)=>s.classList.toggle('active',i+1===step));
+    $('backBtn').style.visibility=step===1?'hidden':'visible';
+    $('nextBtn').textContent=step===4?'Сформировать РП':'Далее →';
+    if(step===4 && !topics.length) generateTopics();
+    if(step===3) syncHours();
+}
+function changeStep(delta){
+    if(delta>0 && step===3 && !validHours()) return;
+    if(step===4 && delta>0){ buildPreview(); openView('preview'); return; }
+    setStep(step+delta);
+}
+function toggleMobile(){
+    document.querySelector('.sidebar').style.display=document.querySelector('.sidebar').style.display==='block'?'none':'block';
+}
+function val(id){return $(id).value}
+function syncHours(){
+    const t=+val('theory')||0,p=+val('practice')||0,l=+val('lab')||0,s=+val('selfWork')||0,total=t+p+l+s,need=+val('totalHours')||0;
+    $('hTheory').textContent=t;$('hPractice').textContent=p;$('hLab').textContent=l;$('hSelf').textContent=s;$('hTotal').textContent=total;
+    const a=$('hourAlert');
+    if(total===need){a.className='alert ok';a.textContent='✓ Часы распределены полностью.'}
+    else if(total<need){a.className='alert warn';a.textContent=`⚠ Не хватает ${need-total} ч.`}
+    else{a.className='alert bad';a.textContent=`⚠ Распределено лишних ${total-need} ч.`}
+    updateTopicCount();
+    return total===need;
+}
+function validHours(){return syncHours()}
+function updateTopicCount(){
+    const duration=Math.max(1,+val('topicDuration')||2), count=Math.ceil((+val('totalHours')||72)/duration);
+    $('topicBadge').textContent=`${topics.length||count} тем · ${topics.reduce((a,x)=>a+x.hours,0)||count*duration} часов`;
+}
+function generateTopics(){
+    const duration=Math.max(1,+val('topicDuration')||2), total=+val('totalHours')||72, count=Math.ceil(total/duration);
+    topics=Array.from({length:count},(_,i)=>({id:crypto.randomUUID(),name:topicNames[i]||`Практическое занятие №${i+1}`,hours:i===count-1?Math.max(1,total-duration*(count-1)):duration}));
+    renderTopics();saveDraft(false);
+}
+function addTopic(){topics.push({id:crypto.randomUUID(),name:'Новая тема',hours:+val('topicDuration')||2});renderTopics()}
+function renderTopics(){
+    const box=$('topicList');box.innerHTML='';
+    topics.forEach((t,i)=>{
+        const el=document.createElement('div');el.className='topic';el.draggable=true;el.dataset.index=i;
+        el.innerHTML=`<div class="num">${i+1}</div><input class="topic-name" value="${escapeAttr(t.name)}"><input class="topic-hours" type="number" min="1" value="${t.hours}"><button class="btn danger">Удалить</button>`;
+        el.querySelector('.topic-name').oninput=e=>t.name=e.target.value;
+        el.querySelector('.topic-hours').oninput=e=>{t.hours=Math.max(1,+e.target.value||1);updateTopicCount()};
+        el.querySelector('button').onclick=()=>{topics.splice(i,1);renderTopics()};
+        el.addEventListener('dragstart',()=>el.classList.add('dragging'));
+        el.addEventListener('dragend',()=>{el.classList.remove('dragging');renumber()});
+        el.addEventListener('dragover',e=>{
+            e.preventDefault();const dragging=document.querySelector('.dragging');
+            if(dragging && dragging!==el){
+                const r=el.getBoundingClientRect();
+                if(e.clientY<r.top+r.height/2) box.insertBefore(dragging,el); else box.insertBefore(dragging,el.nextSibling);
+            }
+        });
+        box.appendChild(el);
+    });
+    updateTopicCount();renderMirror();
+}
+function renumber(){
+    const names=[...$('topicList').children].map(x=>x.querySelector('.topic-name').value);
+    const hours=[...$('topicList').children].map(x=>+x.querySelector('.topic-hours').value||1);
+    topics=names.map((name,i)=>({id:crypto.randomUUID(),name,hours:hours[i]}));renderTopics();
+}
+function renderMirror(){
+    const box=$('topicListMirror'); if(!box)return; box.innerHTML='';
+    if(!topics.length){box.innerHTML='<div class="empty">Тематический план ещё не создан.</div>';return}
+    topics.forEach((t,i)=>{
+        const d=document.createElement('div');d.className='topic';
+        d.innerHTML=`<div class="num">${i+1}</div><div>${escapeHtml(t.name)}</div><span class="badge">${t.hours} ч</span><span></span>`;
+        box.appendChild(d);
+    });
+    $('topicCountLabel').textContent=`${topics.length} тем`;
+}
+function saveDraft(show=true){
+    const data=collect();
+    localStorage.setItem(KEY,JSON.stringify({...data,topics}));
+    if(show) toast('Черновик сохранён');
+    updateStats();
+}
+function collect(){
+    const ids=['specialty','qualification','course','group','year','semester','language','programType','programCode','programName','totalHours','credits','control','roCode','roName','theory','practice','lab','selfWork','topicDuration'];
+    const o={};ids.forEach(id=>o[id]=val(id));return o;
+}
+function loadDraft(){
+    try{
+        const d=JSON.parse(localStorage.getItem(KEY));if(!d)return;
+        Object.keys(d).forEach(k=>{if($(k))$(k).value=d[k]});
+        topics=d.topics||[];renderTopics();syncHours();
+    }catch(e){}
+}
+function saveProgram(){
+    const data={...collect(),topics,savedAt:new Date().toLocaleString('ru-RU')};
+    const arr=JSON.parse(localStorage.getItem(SAVED)||'[]');
+    arr.unshift(data);localStorage.setItem(SAVED,JSON.stringify(arr.slice(0,20)));
+    saveDraft(false);renderSaved();toast('Рабочая программа сохранена');
+}
+function renderSaved(){
+    const box=$('savedList'),arr=JSON.parse(localStorage.getItem(SAVED)||'[]');
+    if(!arr.length){box.innerHTML='<div class="empty">Сохранённых программ пока нет.</div>';return}
+    box.innerHTML='';
+    arr.forEach((p,i)=>{
+        const d=document.createElement('div');d.className='program-item';
+        d.innerHTML=`<div><div class="program-title">${escapeHtml(p.programName||'Без названия')}</div><div class="program-meta">${escapeHtml(p.programCode||'')} · ${p.totalHours||0} ч · ${p.savedAt||''}</div></div><div class="actions"><button class="btn light">Открыть</button><button class="btn danger">Удалить</button></div>`;
+        d.querySelector('.light').onclick=()=>{Object.keys(p).forEach(k=>{if($(k))$(k).value=p[k]});topics=p.topics||[];renderTopics();openView('create');setStep(1)};
+        d.querySelector('.danger').onclick=()=>{arr.splice(i,1);localStorage.setItem(SAVED,JSON.stringify(arr));renderSaved();updateStats()};
+        box.appendChild(d);
+    });
+}
+function buildPreview(){
+    $('pName').textContent=val('programName');
+    $('pInfo').innerHTML=[
+        ['Специальность',val('specialty')],['Квалификация',val('qualification')],
+        ['Курс',val('course')],['Группа',val('group')||'Не указана'],
+        ['Учебный год',val('year')],['Семестр',val('semester')],['Язык',val('language')],
+        ['Код',val('programCode')],['Форма контроля',val('control')]
+    ].map(x=>`<tr><td><b>${escapeHtml(x[0])}</b></td><td>${escapeHtml(x[1])}</td></tr>`).join('');
+    $('pRo').innerHTML=`<b>${escapeHtml(val('roCode'))}</b> — ${escapeHtml(val('roName'))}`;
+    const rows=[['Теория',val('theory')],['Практика',val('practice')],['Лабораторные',val('lab')],['Самостоятельная работа',val('selfWork')],['Итого',val('totalHours')]];
+    $('pHours').innerHTML=rows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]} ч</td></tr>`).join('');
+    $('pTopics').innerHTML=topics.map((t,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(t.name)}</td><td>${t.hours}</td></tr>`).join('');
+}
+function updateStats(){
+    const arr=JSON.parse(localStorage.getItem(SAVED)||'[]');
+    $('statPrograms').textContent=arr.length;
+    $('statHours').textContent=val('totalHours')||72;
+    $('statTopics').textContent=topics.length||Math.ceil((+val('totalHours')||72)/(+val('topicDuration')||2));
+}
+function toast(text){
+    const old=document.querySelector('.toast');if(old)old.remove();
+    const d=document.createElement('div');d.className='toast';d.textContent=text;
+    Object.assign(d.style,{position:'fixed',right:'22px',bottom:'22px',background:'#111827',color:'#fff',padding:'13px 17px',borderRadius:'10px',zIndex:99,boxShadow:'0 8px 25px rgba(0,0,0,.2)'});
+    document.body.appendChild(d);setTimeout(()=>d.remove(),2200);
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function escapeAttr(s){return escapeHtml(s)}
+
+loadDraft();
+if(!topics.length)generateTopics();
+setStep(1);
+updateStats();
+</script>
+</body>
+</html>
